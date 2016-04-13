@@ -13,10 +13,10 @@ shinyUI(pageWithSidebar(
           h3('Text Input Area'),
           textInput('textin', 'entered text', value = "", width = NULL, placeholder = "---"),
           h4('Prediction 1'),
-          verbatimTextOutput("oPred1"),
-          h4('Prediction 2'),
-          verbatimTextOutput('oPred2'),
-          h4('Prediction 3'),
-          verbatimTextOutput('oPred3')
+          verbatimTextOutput("oPred1")
+          #h4('Prediction 2'),
+          #verbatimTextOutput('oPred2'),
+          #h4('Prediction 3'),
+          #verbatimTextOutput('oPred3')
      ) 
 ))
