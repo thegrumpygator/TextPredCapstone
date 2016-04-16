@@ -7,7 +7,7 @@ library("dplyr")
 
 
 #sources <- readRDS("datasources.rds")
-sources <- readRDS("TwentyPercentdatasources.rds")
+sources <- readRDS("TwentyPercentdatasources-.rds")
 
 
 
@@ -58,6 +58,101 @@ ngp <- function(ngv) # ngv = n-gram vector
      }
      return (result)
      
+}
+
+i3to1 <- function(str_in)
+{
+     idxn <- which(sources[[4]]$lefty == str_in)
+     idx4 <- idxn[1:4]
+     res <- data.table(word = sources[[4]]$righty[idx4], prob = sources[[4]]$prob[idx4])
+     return(res)
+}
+
+i2to1 <- function(str_in)
+{
+     idxn <- which(sources[[3]]$lefty == str_in)
+     idx4 <- idxn[1:4]
+     res <- data.table(word = sources[[3]]$righty[idx4], prob = sources[[3]]$prob[idx4])
+     return(res)
+}
+
+i1to1 <- function(str_in)
+{
+     idxn <- which(sources[[2]]$lefty == str_in)
+     idx4 <- idxn[1:4]
+     res <- data.table(word = sources[[2]]$righty[idx4], prob = sources[[2]]$prob[idx4])
+     return(res)
+}
+
+into1 <- function(str_in, i)
+{
+     idxn <- which(sources[[i+1]]$lefty == str_in)
+     idx4 <- idxn[1:4]
+     res <- data.table(word = sources[[i+1]]$righty[idx4], prob = sources[[i+1]]$prob[idx4])
+     return(res)
+}
+
+pmerge <- function(str_in)
+{
+     # merge the 4 data.tables with their probabilities
+     a <- i3to1(str_in)
+     
+     b <- i2to1(str_in)
+     b <- mutate(b, prob = prob * 0.4)
+     
+     c <- i1to1(str_in)
+     c <- mutate(c, prob = prob * 0.4 * 0.4)
+     
+     d <- data.table(righty = sources[[1]]$phrase[1:4], prob = sources[[1]]$prob[1:4])
+     d <- mutate(d, prob = prob * 0.4 * 0.4 * 0.4)
+     
+     return (rbind(a, b, c, d))
+}
+
+bmerge <- function(str_in)
+{
+     a <- btokens(str_in)
+     
+     res <- data.table(word = sources[[1]]$phrase[1:4], prob = (.00001^3) * sources[[1]]$prob[1:4])
+     
+     for (i in 1:length(a))
+     {
+          b <- into1(a[i], i) %>% mutate(prob = prob * (0.04)^(3-i))
+          res <- rbind(res, b)
+     }
+
+     res <- res %>% 
+          group_by(word) %>% 
+          summarize(prob = sum(prob)) %>%
+          arrange(desc(prob))
+     
+     return(res)
+     #return(res[1:3])
+}
+
+
+bmerge_test <- function(str_in)
+{
+     a <- btokens(str_in)
+     
+     res <- NULL
+     
+     for (i in 1:length(a))
+     {
+          b <- into1(a[i], i)
+          b <- mutate(b, prob = prob * (0.4)^(3-i))
+          res <- rbind(res, b)
+     }
+     # add in the single words ...
+     res <- rbind(
+          res, 
+          data.table(word = sources[[1]]$phrase[1:4], prob = sources[[1]]$prob[1:4])
+     )
+     
+     # collapse
+     #res <- res %>% group_by(word) %>% summarize(sum(prob))
+     return(res)
+     #return(res[1:3])
 }
 
 ftoken <- function(str_in) 
