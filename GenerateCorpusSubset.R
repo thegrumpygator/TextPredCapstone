@@ -41,23 +41,35 @@ subblog <- sample(blogLines, length(blogLines)*sampleSize, replace = FALSE) #25M
 subnews <- sample(newsLines, length(newsLines)*sampleSize, replace = FALSE) #25MB
 subtwit <- sample(twitLines, length(twitLines)*sampleSize, replace = FALSE) #30MB
 
+
+# Save some files here
+
+# saveRDS(blogLines, "blogs.rds")
+# saveRDS(newsLines, "news.rds")
+# saveRDS(twitLines, "twit.rds")
+
 rm(blogLines)
 rm(newsLines)
 rm(twitLines)
-
-# combine the samples from the three files
-# each row is a record from the original files
-subSet <- c(subnews, subblog, subtwit) # 80MB
-
-subSet2 <-paste0(subSet, collapse = " ") #55MB
-#subSet <- subblog  ## temp while debugging
-
 rm(blogcon)
 rm(newscon)
 rm(twitcon)
 rm(blogfile)
 rm(newsfile)
 rm(twitfile)
+
+gc()
+
+# combine the samples from the three files
+# each row is a record from the original files
+subSet <- c(subnews, subblog, subtwit) # 80MB
+
+#subSet1 <- c("don't", subSet)
+
+
+subSet2 <-paste0(subSet, collapse = " ") #55MB
+#subSet <- subblog  ## temp while debugging
+
 
 # ~2 minutes
 
@@ -67,26 +79,18 @@ library("quanteda")
 library("data.table")
 library("dplyr")
 
-#totaltext <- paste0(twitLines, blogLines, newsLines, collapse = " ")#
-#corpustotal <- corpus(totaltext)#
-
-# Used in the report to determine total size of the files ... not needed here.
-# corpustwitter <- corpus(paste0(twitLines, collapse = " "))
-# corpusblogs <- corpus(paste0(blogLines, collapse = " "))
-# corpusnews <- corpus(paste0(newsLines, collapse = " "))
-# 
-# nt <- ntoken(corpustwitter)
-# nb <- ntoken(corpusblogs)
-# nn <- ntoken(corpusnews)
-# nlt <- length(twitLines)
-# nlb <- length(blogLines)
-# nln <- length(newsLines)
-#ntoken(corpustotal)
-
+################################################################################
+#
 # Create a corpus of the one-long-line subset and then count the words...
-subsetcorpus <- corpus(subSet2)
-num_words_in_subset2 <- ntoken(subsetcorpus)
-
+# Appears that this is never used other than to compute word count
+# of full corpus.
+# 
+# 
+subsetcorpus <- corpus(subSet2) # this is a QUANTEDA corpus
+num_words_in_subset2 <- ntoken(subsetcorpus) # 24222136
+#
+#
+################################################################################
 
 profile <- "profanewords.txt"
 profcon <- file(profile, open="r")
@@ -94,28 +98,23 @@ profanewords <- readLines(profcon)
 close(profcon)
 rm(profcon)
 rm(profile)
+rm(subblog)
+rm(subnews)
+rm(subtwit)
+gc()
 
 # create the corpus from the samples
-SubCorp <- VCorpus(VectorSource(subSet2))
+SubCorp <- VCorpus(VectorSource(subSet2)) # this is a TM corpus
 SubCorp <- tm_map(SubCorp, PlainTextDocument)
 SubCorp <- tm_map(SubCorp, content_transformer(tolower))
 SubCorp <- tm_map(SubCorp, removeNumbers) 
 SubCorp <- tm_map(SubCorp, removePunctuation)
 SubCorp <- tm_map(SubCorp, stripWhitespace)
-SubCorp <- tm_map(SubCorp, removeWords, profanewords)
+SubCorp <- tm_map(SubCorp, removeWords, profanewords) # a little bit slow ...
 #-------------------------------------------------
 rm(profanewords)
 #SubCorp is a "clean" corpus -- 52MB
 
-# cleaned corpus
-#thissubcorp <- corpus(SubCorp)
+##########################################
 
-
-
-
-
-
-
-
-###########################################
 saveRDS(SubCorp, "TwentyPercentsubcorpbackup.rds")

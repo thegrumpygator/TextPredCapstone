@@ -9,24 +9,24 @@ library("dplyr")
 
 mycleanqdcorpus <- corpus(SubCorp)
 rm(SubCorp)
-#num_words_in_clean_subset2 <- ntoken(mycleanqdcorpus)
 
-# tokenize to words (1-grams)
-mycleanqdtokens <- tokenize(mycleanqdcorpus) # don't need options since it's already cleaned. (n1g)
-n1g <- mycleanqdtokens                                  # 170 MB
-n2g <- ngrams(mycleanqdtokens, n=2, concatenator = " ") # 422 MB
-n3g <- ngrams(mycleanqdtokens, n=3, concatenator = " ") # 950 MB
-n4g <- ngrams(mycleanqdtokens, n=4, concatenator = " ") # 1.3GB
+n1g <- tokenize(mycleanqdcorpus)
+n2g <- ngrams(n1g, n=2, concatenator = " ") # 422 MB
+n3g <- ngrams(n1g, n=3, concatenator = " ") # 950 MB
+n4g <- ngrams(n1g, n=4, concatenator = " ") # 1.3GB
 
-rm(mycleanqdtokens)
+n1 <- ntoken(n1g)
+n2 <- ntoken(n2g)
+n3 <- ntoken(n3g)
+n4 <- ntoken(n4g)
+
+# Course 2 [not sure how this works...]
+###ng <- tokenize(mycleanqdcorpus, ngrams = 1:4, concatenator = " ")
+
+#rm(mycleanqdtokens)
 rm(mycleanqdcorpus)
 
-
-#my1dfm <- dfm(mycleanqdcorpus) # features of base doc
-# my1dfm <- dfm(n1g) # features of base doc
-# my2dfm <- dfm(n2g) 
-# my3dfm <- dfm(n3g)
-
+# Process n-grams ditching any that occur only 1 time
 my1dfm <- trim(dfm(n1g), minCount = 2) # features of base doc 10 MB
 my2dfm <- trim(dfm(n2g), minCount = 2) #                      95 MB
 my3dfm <- trim(dfm(n3g), minCount = 2) #                      130MB
@@ -59,23 +59,23 @@ my2dfmFeatures <- topfeatures(my2dfm, length(my2dfm))
 my3dfmFeatures <- topfeatures(my3dfm, length(my3dfm))
 my4dfmFeatures <- topfeatures(my4dfm, length(my4dfm))
 
-# wordProb:
-ng1_Prob <- my1dfmFeatures / sum(my1dfmFeatures)
+# wordProb: Not really probabilities, actually just normalize them...
+#ng1_Prob <- my1dfmFeatures / sum(my1dfmFeatures)
 ng2_Prob <- my2dfmFeatures / sum(my2dfmFeatures)
 ng3_Prob <- my3dfmFeatures / sum(my3dfmFeatures)
+#ng4_Prob <- my4dfmFeatures / sum(my4dfmFeatures)
 
-# Convert my probabilities to data tables
-# (Doesn't work since matrix becomes a chr matrix
-#  probabilities are converted to chr)
-# pdt1 <- data.table(cbind(names(ng1_Prob), ng1_Prob))
-# pdt2 <- data.table(cbind(names(ng2_Prob), ng2_Prob))
-# pdt3 <- data.table(cbind(names(ng3_Prob), ng3_Prob))
+n1a <- sum(my1dfmFeatures)
+n2a <- sum(my2dfmFeatures)
+n3a <- sum(my3dfmFeatures)
+n4a <- sum(my4dfmFeatures)
 
-#pdt1 <- data.table(phrase = names(ng1_Prob), prob = ng1_Prob)
-f1 <- data.table(phrase = names(ng1_Prob), prob = ng1_Prob) %>% 
-     arrange(desc(prob), phrase)
 
-#pdt2 <- data.table(phrase = names(ng2_Prob), prob = ng2_Prob)
+f1<- data.table(phrase = names(my1dfmFeatures), num = my1dfmFeatures) %>%
+     mutate(prob = num/sum(num)) %>%
+     arrange(desc(prob), phrase) %>%
+     select(phrase, prob)
+
 f2 <- data.table(phrase = names(ng2_Prob), prob = ng2_Prob) %>% 
      mutate(lefty = sapply(phrase, Ltoken)) %>%
      mutate(righty= sapply(phrase, Rtoken)) %>%
@@ -95,41 +95,6 @@ f4 <- data.table(phrase = names(my4dfmFeatures), num = my4dfmFeatures) %>%
      arrange(desc(prob), lefty) %>%
      select(lefty, righty, prob)
 
-
-# #sources <- list(pdt1, pdt2, pdt3)
-# 
-# # transform f1 to consistent format
-# 
-# 
-# # create word table for 2-grams
-# f2 <- tbl_df(pdt2)
-# f2 <- f2 %>% transmute(phrase = V1, prob = ng2_Prob) %>%
-#      mutate(lefty = sapply(phrase, Ltoken)) %>%
-#      mutate(righty = sapply(phrase, Rtoken)) %>%
-#      arrange(lefty, desc(prob))
-# 
-# # create word table for 3-grams
-# f3 <- tbl_df(pdt3)
-# f3 <- f3 %>% transmute(phrase = V1, prob = ng3_Prob) %>%
-#      mutate(lefty = sapply(phrase, Ltoken)) %>%
-#      mutate(righty = sapply(phrase, Rtoken)) %>%
-#      arrange(lefty, desc(prob))
-
-# # create word table for 4-grams
-# f4 <- as.data.frame(my4dfmFeatures)
-# f4 <- add_rownames(f4, var = "phrase")
-# f4 <- tbl_df(f4)
-# f4 <- f4 %>% 
-#      mutate(num = my4dfmFeatures) %>% 
-#      select(phrase, num) %>% 
-#      mutate(prob = num/sum(num)) %>%
-#      mutate(lefty = sapply(phrase, Ltoken)) %>%
-#      mutate(righty = sapply(phrase, Rtoken)) %>%
-#      arrange(lefty, desc(prob))
-
 sources <- list(f1, f2, f3, f4)
-
-
-
 
 saveRDS(sources, "TwentyPercentdatasources-.rds")
