@@ -9,13 +9,8 @@ library("dplyr")
 #sources <- readRDS("datasources.rds")
 #sources <- readRDS("TwentyPercentdatasources.rds")
 
-# 20% of total corpus
-sources <- readRDS("TwentyPercentdatasources-.rds") 
-
-# 30% of twitter and news
-
-
-
+# # 30% of twitter and news
+sources <- readRDS("ThirtyPercentdatasources--.rds") 
 
 # user defined functions
 
@@ -53,34 +48,49 @@ into1 <- function(str_in, i)
 #    and returns 3 top suggestions and their relative strength
 bmerge <- function(str_in)
 {
-     a <- btokens(str_in)
-     
-     # initialize with HEAVILY penalized single word suggestions
-     res <- data.table(
-          pre = "NA",
-          word = sources[[1]]$phrase[1:4], 
-          prob = (.00001^3) * sources[[1]]$prob[1:4])
-     
-     for (i in 1:length(a))
+     if(missing(str_in))# | nchar(str_in) < 1)
+          #if(length(str_in)<2)
      {
-          # get the i_th result and penalize based on order
-          b <- into1(a[i], i) %>%
-               mutate(prob = prob * (.01)^(3-i))
-          res <- rbind(res, b)
+          res <- data.table(
+               word = c(" ", " ", " "),
+               n_prob = c(0, 0, 0)
+          )
      }
-     res_ <- res %>%
-          arrange(desc(prob))
+     else if(nchar(str_in) < 1)
+     {
+          res <- data.table(
+               word = c(" ", " ", " "),
+               n_prob = c(0, 0, 0)
+          )
+     }
+     else
+     {
+          a <- btokens(str_in)
+          
+          # initialize with HEAVILY penalized single word suggestions
+          res <- data.table(
+               pre = "NA",
+               word = sources[[1]]$phrase[1:4], 
+               prob = (.00001^3) * sources[[1]]$prob[1:4])
+          
+          for (i in 1:length(a))
+          {
+               # get the i_th result and penalize based on order
+               b <- into1(a[i], i) %>%
+                    mutate(prob = prob * (.01)^(3-i))
+               res <- rbind(res, b)
+          }
+          res_ <- res %>%
+               arrange(desc(prob))
+          
+          res <- res %>% 
+               group_by(word) %>% 
+               summarize(prob = sum(prob)) %>%
+               mutate(n_prob = prob / max(prob, na.rm = TRUE)) %>%
+               arrange(desc(n_prob)) %>%
+               select(word, n_prob)
+     }
      
-     res <- res %>% 
-          group_by(word) %>% 
-          summarize(prob = sum(prob)) %>%
-          mutate(n_prob = prob / max(prob, na.rm = TRUE)) %>%
-          arrange(desc(n_prob)) %>%
-          select(word, n_prob)
-     
-     
-     
-     #return(res)
      return(res[1:3])
 }
 

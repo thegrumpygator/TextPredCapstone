@@ -1,4 +1,4 @@
-SubCorp <- readRDS("TwentyPercentsubcorpbackup.rds")
+SubCorp <- readRDS("ThirtyPercentsubcorpbackup.rds")
 ###########################################
 
 library("RWeka")
@@ -87,25 +87,12 @@ f2 <- data.table(phrase = names(my2dfmFeatures), num = my2dfmFeatures) %>%
      arrange(desc(prob), lefty) %>%
      select(lefty, righty, prob)
 
-# f2 <- data.table(phrase = names(ng2_Prob), prob = ng2_Prob) %>% 
-#      mutate(lefty = sapply(phrase, Ltoken)) %>%
-#      mutate(righty= sapply(phrase, Rtoken)) %>%
-#      arrange(desc(prob), lefty) %>%
-#      select(lefty, righty, prob)
-
 f3 <- data.table(phrase = names(my3dfmFeatures), num = my3dfmFeatures) %>% 
      mutate(prob = num/sum(num)) %>%
      mutate(lefty = sapply(phrase, Ltoken)) %>%
      mutate(righty= sapply(phrase, Rtoken)) %>%
      arrange(desc(prob), lefty) %>%
      select(lefty, righty, prob)
-
-
-# f3 <- data.table(phrase = names(ng3_Prob), prob = ng3_Prob) %>% 
-#      mutate(lefty = sapply(phrase, Ltoken)) %>%
-#      mutate(righty= sapply(phrase, Rtoken)) %>%
-#      arrange(desc(prob), lefty) %>%
-#      select(lefty, righty, prob)
 
 f4 <- data.table(phrase = names(my4dfmFeatures), num = my4dfmFeatures) %>%
      mutate(prob = num/sum(num)) %>%
@@ -116,4 +103,4 @@ f4 <- data.table(phrase = names(my4dfmFeatures), num = my4dfmFeatures) %>%
 
 sources <- list(f1, f2, f3, f4)
 
-saveRDS(sources, "TwentyPercentdatasources--.rds")
+saveRDS(sources, "ThirtyPercentdatasources--.rds")

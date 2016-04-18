@@ -34,7 +34,7 @@ close(twitcon)
 #subblog <- blogLines[1:10]
 
 #sampleSize <- 0.1 # grab 10% of each file
-sampleSize <- 0.2 # grab 10% of each file
+sampleSize <- 0.3 # grab 10% of each file
 set.seed(11111)
 
 subblog <- sample(blogLines, length(blogLines)*sampleSize, replace = FALSE) #25MB
@@ -79,18 +79,18 @@ library("quanteda")
 library("data.table")
 library("dplyr")
 
-################################################################################
-#
-# Create a corpus of the one-long-line subset and then count the words...
-# Appears that this is never used other than to compute word count
-# of full corpus.
-# 
-# 
-subsetcorpus <- corpus(subSet2) # this is a QUANTEDA corpus
-num_words_in_subset2 <- ntoken(subsetcorpus) # 24222136
-#
-#
-################################################################################
+# ################################################################################
+# #
+# # Create a corpus of the one-long-line subset and then count the words...
+# # Appears that this is never used other than to compute word count
+# # of full corpus.
+# # 
+# # 
+# subsetcorpus <- corpus(subSet2) # this is a QUANTEDA corpus
+# num_words_in_subset2 <- ntoken(subsetcorpus) # 24222136
+# #
+# #
+# ################################################################################
 
 profile <- "profanewords.txt"
 profcon <- file(profile, open="r")
@@ -117,4 +117,4 @@ rm(profanewords)
 
 ##########################################
 
-saveRDS(SubCorp, "TwentyPercentsubcorpbackup.rds")
+saveRDS(SubCorp, "ThirtyPercentsubcorpbackup.rds")
